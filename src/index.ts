@@ -2,20 +2,20 @@ import { program } from 'commander';
 import fs from 'fs';
 import ignore from 'ignore';
 import path from 'path';
+import { loadConfig } from './config';
+import { DokkitConfig } from './types';
 
 function summarizeFile(filePath: string): string {
   const content = fs.readFileSync(filePath, 'utf-8');
   return `## File: ${path.basename(filePath)}\n\n\`\`\`\n${content}\n\`\`\`\n\n`;
 }
 
-function processDirectory(dirPath: string, isRoot: boolean = true): string[] {
+function processDirectory(dirPath: string, config: DokkitConfig, isRoot: boolean = true): string[] {
+  const outputPath = config.output
+    ? path.resolve(dirPath, config.output)
+    : path.join(dirPath, '.instructions', 'summary.md');
   const files = fs.readdirSync(dirPath);
-  const instructionsDir = path.join(dirPath, '.instructions');
   const gitignorePath = path.join(dirPath, '.gitignore');
-
-  if (!fs.existsSync(instructionsDir)) {
-    fs.mkdirSync(instructionsDir);
-  }
 
   const summaries: string[] = [];
   const ig = ignore();
@@ -58,15 +58,16 @@ function processDirectory(dirPath: string, isRoot: boolean = true): string[] {
       summaries.push(summary);
     } else if (stats.isDirectory() && file !== '.instructions') {
       // Recursively process subdirectories
-      const subDirSummaries = processDirectory(filePath, false) || [];
+      const subDirSummaries = processDirectory(filePath, config, false) || [];
       summaries.push(...subDirSummaries);
     }
   });
 
   if (isRoot) {
-    const summaryFilePath = path.join(dirPath, '.instructions', 'summary.md');
-    fs.writeFileSync(summaryFilePath, summaries.join('---\n\n'));
-    console.log(`Summaries written to ${summaryFilePath}`);
+    // Ensure the directory exists
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, summaries.join('---\n\n'));
+    console.info(`Summaries written to ${outputPath}`);
   }
 
   return summaries;
@@ -75,8 +76,16 @@ function processDirectory(dirPath: string, isRoot: boolean = true): string[] {
 program
   .version('1.0.0')
   .argument('<directory>', 'Directory to process')
-  .action((directory: string) => {
-    processDirectory(directory);
+  .option('-o, --output <path>', 'Output file path')
+  .action((directory: string, options: { output?: string }) => {
+    const config = loadConfig(directory);
+
+    // Command-line option takes precedence over config file
+    if (options.output) {
+      config.output = options.output;
+    }
+
+    processDirectory(directory, config, true);
   });
 
 program.parse(process.argv);
