@@ -6,9 +6,9 @@ import { openai } from "@ai-sdk/openai";
 import { Prompt } from '../types';
 
 /**
- * Loads prompts from markdown files in the specified directory.
- * @param promptsDir - The directory path containing prompt markdown files.
- * @returns An array of Prompt objects.
+ * Loads prompts from the specified directory.
+ * @param {string} promptsDir - The directory containing prompt files.
+ * @returns {Prompt[]} An array of loaded prompts.
  */
 export function loadPrompts(promptsDir: string): Prompt[] {
   const prompts: Prompt[] = [];
@@ -24,6 +24,7 @@ export function loadPrompts(promptsDir: string): Prompt[] {
         name: data.name || path.basename(file, '.md'),
         description: data.description || '',
         content: content.trim(),
+        output: data.output || 'output.md'
       });
     }
   });
@@ -32,23 +33,23 @@ export function loadPrompts(promptsDir: string): Prompt[] {
 }
 
 /**
- * Finds a prompt by its name (case-insensitive).
- * @param prompts - An array of Prompt objects to search through.
- * @param task - The name of the task/prompt to find.
- * @returns The matching Prompt object, or undefined if not found.
+ * Finds a prompt by its name.
+ * @param {Prompt[]} prompts - The array of prompts to search.
+ * @param {string} task - The name of the task to find.
+ * @returns {Prompt | undefined} The found prompt or undefined.
  */
 export function findPrompt(prompts: Prompt[], task: string): Prompt | undefined {
   return prompts.find((prompt) => prompt.name.toLowerCase() === task.toLowerCase());
 }
 
 /**
- * Executes a prompt by replacing a placeholder with a summary and generating text using an AI model.
- * @param prompt - The Prompt object to execute.
- * @param outputPath - The file path containing the summary to inject into the prompt.
- * @returns A Promise that resolves to the generated text string.
+ * Executes a prompt using the AI model.
+ * @param {Prompt} prompt - The prompt to execute.
+ * @param {string} summaryPath - The path to the summary file.
+ * @returns {Promise<string>} The result of the AI execution.
  */
-export async function executePrompt(prompt: Prompt, outputPath: string): Promise<string> {
-  const summary = fs.readFileSync(outputPath, 'utf-8');
+export async function executePrompt(prompt: Prompt, summaryPath: string): Promise<string> {
+  const summary = fs.readFileSync(summaryPath, 'utf-8');
   const promptWithSummary = prompt.content.replace('{{SUMMARY}}', summary);
 
   try {

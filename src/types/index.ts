@@ -6,6 +6,7 @@ export interface Prompt {
   name: string;
   description: string;
   content: string;
+  output: string;
 }
 
 export interface ProcessOptions {

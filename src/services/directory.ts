@@ -71,7 +71,6 @@ export function processDirectory(dirPath: string, outputDir: string): string[] {
   // Write summaries to the output file
   const outputPath = path.join(outputDir, 'summary.md');
   fs.writeFileSync(outputPath, summaries.join('---\n\n'));
-  console.info(`Summaries written to ${outputPath}`);
 
   return summaries;
 }

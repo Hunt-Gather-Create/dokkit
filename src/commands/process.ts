@@ -22,7 +22,7 @@ export async function processCommand(directory: string, options: ProcessOptions)
   const summaryPath = path.join(outputDir, 'summary.md');
 
   if (options.task) {
-    await handleTask(directory, summaryPath, options.task);
+    await handleTask(directory, outputDir, summaryPath, options.task);
   } else {
     // Original functionality: process directory and create summary
     processDirectory(directory, outputDir);
@@ -32,14 +32,15 @@ export async function processCommand(directory: string, options: ProcessOptions)
 /**
  * Handles the task execution based on the given parameters.
  * @param {string} directory - The directory containing the prompts.
+ * @param {string} outputDir - The directory where the output will be saved.
  * @param {string} summaryPath - The path to the summary file.
  * @param {string} task - The task to execute.
  */
-async function handleTask(directory: string, summaryPath: string, task: string): Promise<void> {
+async function handleTask(directory: string, outputDir: string, summaryPath: string, task: string): Promise<void> {
   // Check if summary exists, if not, generate it first
   if (!fs.existsSync(summaryPath)) {
     console.info('Summary not found. Generating summary first...');
-    processDirectory(directory, path.dirname(summaryPath));
+    processDirectory(directory, outputDir);
   }
 
   const promptsDir = path.join(directory, 'prompts');
@@ -58,7 +59,9 @@ async function handleTask(directory: string, summaryPath: string, task: string):
 
   if (selectedPrompt) {
     const result = await executePrompt(selectedPrompt, summaryPath);
-    console.log(result);
+    const outputPath = path.join(outputDir, selectedPrompt.output);
+    fs.writeFileSync(outputPath, result);
+    console.log(`Task result written to ${outputPath}`);
   } else {
     console.error(`No prompt found for task: ${task}`);
     process.exit(1);
