@@ -24,8 +24,9 @@ export async function processCommand(directory: string, options: ProcessOptions)
   if (options.task) {
     await handleTask(directory, outputDir, summaryPath, options.task);
   } else {
-    // Original functionality: process directory and create summary
+    // If no task is specified, just summarize the repository
     processDirectory(directory, outputDir);
+    console.log(`Repository summary created at ${summaryPath}`);
   }
 }
 
