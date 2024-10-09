@@ -25,7 +25,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ai": "^3.4.9",
+    "@ai-sdk/openai": "^0.0.66",
     "commander": "^9.5.0",
+    "gray-matter": "^4.0.3",
     "ignore": "^6.0.2"
   },
   "devDependencies": {

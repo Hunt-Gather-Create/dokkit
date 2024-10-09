@@ -4,7 +4,8 @@ import ignore from 'ignore';
 import path from 'path';
 import { loadConfig } from './config';
 import { DokkitConfig } from './types';
-import { version } from '../package.json';
+import { version } from './version';
+import { loadPrompts, findPrompt, executePrompt, Prompt } from './ai';
 
 function summarizeFile(filePath: string): string {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -75,7 +76,8 @@ program
   .version(version)
   .argument('<directory>', 'Directory to process')
   .option('-o, --output <path>', 'Output file path')
-  .action((directory: string, options: { output?: string }) => {
+  .option('--task <task>', 'Task to execute')
+  .action(async (directory: string, options: { output?: string, task?: string }) => {
     const config = loadConfig(directory);
 
     // Command-line option takes precedence over config file
@@ -87,7 +89,33 @@ program
       ? path.resolve(directory, config.output)
       : path.join(directory, '.instructions', 'summary.md');
 
-    processDirectory(directory, config, outputPath, true);
+    if (options.task) {
+      const promptsDir = path.join(directory, 'prompts');
+      if (!fs.existsSync(promptsDir)) {
+        console.error('Prompts directory not found. Please create a "prompts" folder with your markdown prompt files.');
+        process.exit(1);
+      }
+
+      const prompts = loadPrompts(promptsDir);
+      const selectedPrompt = findPrompt(prompts, options.task);
+
+      if (selectedPrompt) {
+        console.log(`Executing prompt: ${selectedPrompt.name}`);
+        console.log(`Description: ${selectedPrompt.description}`);
+        console.log('Prompt content:');
+        console.log(selectedPrompt.content);
+
+        const result = await executePrompt(selectedPrompt);
+        console.log('AI Response:');
+        console.log(result);
+      } else {
+        console.error(`No prompt found for task: ${options.task}`);
+        process.exit(1);
+      }
+    } else {
+      // Original functionality: process directory and create summary
+      processDirectory(directory, config, outputPath, true);
+    }
   });
 
 program.parse(process.argv);
