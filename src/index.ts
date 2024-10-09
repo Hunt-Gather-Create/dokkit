@@ -4,6 +4,7 @@ import ignore from 'ignore';
 import path from 'path';
 import { loadConfig } from './config';
 import { DokkitConfig } from './types';
+import { version } from '../package.json';
 
 function summarizeFile(filePath: string): string {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -71,7 +72,7 @@ function processDirectory(dirPath: string, config: DokkitConfig, outputPath: str
 }
 
 program
-  .version('1.0.1')
+  .version(version)
   .argument('<directory>', 'Directory to process')
   .option('-o, --output <path>', 'Output file path')
   .action((directory: string, options: { output?: string }) => {

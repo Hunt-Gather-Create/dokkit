@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "version": "pnpm run build && git add -A dist",
+    "increment-version": "npm version patch",
+    "version": "npm run increment-version && pnpm run build && git add -A dist",
     "prepublishOnly": "pnpm run build && pnpm run version",
     "test": "vitest run",
     "test:watch": "vitest",
