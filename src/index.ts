@@ -10,10 +10,7 @@ function summarizeFile(filePath: string): string {
   return `## File: ${path.basename(filePath)}\n\n\`\`\`\n${content}\n\`\`\`\n\n`;
 }
 
-function processDirectory(dirPath: string, config: DokkitConfig, isRoot: boolean = true): string[] {
-  const outputPath = config.output
-    ? path.resolve(dirPath, config.output)
-    : path.join(dirPath, '.instructions', 'summary.md');
+function processDirectory(dirPath: string, config: DokkitConfig, outputPath: string, isRoot: boolean = true): string[] {
   const files = fs.readdirSync(dirPath);
   const gitignorePath = path.join(dirPath, '.gitignore');
 
@@ -58,7 +55,7 @@ function processDirectory(dirPath: string, config: DokkitConfig, isRoot: boolean
       summaries.push(summary);
     } else if (stats.isDirectory() && file !== '.instructions') {
       // Recursively process subdirectories
-      const subDirSummaries = processDirectory(filePath, config, false) || [];
+      const subDirSummaries = processDirectory(filePath, config, outputPath, false) || [];
       summaries.push(...subDirSummaries);
     }
   });
@@ -74,7 +71,7 @@ function processDirectory(dirPath: string, config: DokkitConfig, isRoot: boolean
 }
 
 program
-  .version('1.0.0')
+  .version('1.0.1')
   .argument('<directory>', 'Directory to process')
   .option('-o, --output <path>', 'Output file path')
   .action((directory: string, options: { output?: string }) => {
@@ -85,7 +82,11 @@ program
       config.output = options.output;
     }
 
-    processDirectory(directory, config, true);
+    const outputPath = config.output
+      ? path.resolve(directory, config.output)
+      : path.join(directory, '.instructions', 'summary.md');
+
+    processDirectory(directory, config, outputPath, true);
   });
 
 program.parse(process.argv);
